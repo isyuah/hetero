@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+body {
+  font-family: var(--font-noto-sans-sc);
+}
+
+a.normal {
+  margin: 0 3px;
+  transition: color .2s;
+  &:hover {
+    color: #2772c8
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@view-transition {
+  navigation: auto;
+}

@@ -1,0 +1,35 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from '@/components/Footer.astro'
+const { gradientBackground } = Astro.props
+---
+<div class="main">
+  {gradientBackground && <div class="gradient"></div>}
+  <Header></Header>
+  <main>
+    <slot></slot>
+  </main>
+  <Footer></Footer>
+</div>
+
+<style>
+  .gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    z-index: -50;
+    background: linear-gradient(#e3f2f3e4, transparent);
+  }
+  .main {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  main {
+    flex: 1;
+  }
+</style>

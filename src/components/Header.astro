@@ -1,0 +1,65 @@
+---
+---
+<header>
+  <div class="logo">
+    <svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <g id="compass" fill="none" stroke="#2D2E32" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="100" cy="40" r="12" />
+          <path d="M 100 52 L 40 180" />
+          <path d="M 100 52 L 160 180" />
+          <path d="M 65 130 A 50 50 0 0 1 135 130" />
+      </g>
+    </svg>
+    <span class="site-name">Hetero</span>
+  </div>
+  <div class="nav">
+    <a href="/" class="item">首页</a>
+    <a href="/posts" class="item">文章</a>
+  </div>
+</header>
+
+<style>
+  header {
+    view-transition-name: header;
+    height: 64px;
+    margin: 0 5%;
+    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  @media (max-width: 768px) {
+    header {
+      margin: 0;
+      padding: 0 1rem;
+    }
+  }
+  .logo {
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    letter-spacing: 2px;
+    color: #334155
+  }
+  .site-name {
+    margin-left: 2px;
+    font-family: var(--font-cascadia-code);
+  }
+  .nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav .item {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #141415;
+    padding: 10px 10px;
+    transition: all .25s;
+    border-bottom: 2px solid transparent;
+  }
+  .nav .item:hover {
+    border-bottom: 2px solid #334155;
+  }
+</style>

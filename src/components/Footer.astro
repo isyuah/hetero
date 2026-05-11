@@ -1,0 +1,25 @@
+---
+const year = new Date().getFullYear();
+---
+
+<div class="footer">
+  <div class="line">
+    Built with <a href="https://astro.build" class="normal" target="_blank" referrerpolicy="no-referrer">Astro</a>
+  </div>
+  <div class="line">
+    © 2026 - {year} isyuah
+  </div>
+</div>
+<style>
+  .footer {
+    view-transition-name: footer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 10px 0;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #333;
+  }
+</style>
