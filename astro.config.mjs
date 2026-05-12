@@ -11,9 +11,11 @@ import rehypeExternalLinks from 'rehype-external-links';
 import icon from 'astro-icon';
 
 import sitemap from '@astrojs/sitemap';
+import edgeoneAda from '@edgeone/astro'
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://blog.isyuah.top",
   integrations: [react(), expressiveCode({
     themes: ['github-light'],
   }), mdx(), icon(), sitemap()],
@@ -32,7 +34,7 @@ export default defineConfig({
     provider: fontProviders.fontsource(),
     name: 'Cascadia Code',
     cssVariable: '--font-cascadia-code',
-    weights: [500, 600, 700, 800],
+    weights: [400, 500, 600, 700, 800],
   }],
 
   vite: {
@@ -47,7 +49,8 @@ export default defineConfig({
     }
   },
 
-  adapter: node({
-    mode: 'standalone'
-  }),
+  // adapter: node({
+  //   mode: 'standalone'
+  // }),
+  adapter: edgeoneAda()
 });

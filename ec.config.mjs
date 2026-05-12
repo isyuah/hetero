@@ -9,7 +9,7 @@ export default defineEcConfig({
     showLineNumbers: true,
   },
   styleOverrides: {
-    codeFontFamily: "Cascadia Code",
+    codeFontFamily: "var(--font-cascadia-code)",
     codeFontSize: "0.9rem",
     frames: {
       frameBoxShadowCssValue: "none",

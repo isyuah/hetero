@@ -1,6 +1,5 @@
 import type { InferEntrySchema } from "astro:content";
 import { statSync } from "node:fs";
-import path from "node:path"
 
 interface WithFilePath {
   filePath?: string;
@@ -9,8 +8,8 @@ interface WithFilePath {
 
 interface WithDateTime {
   time: {
-    updatedAt: Date,
-    createdAt: Date,
+    updatedAt: number,
+    createdAt: number,
   }
 }
 
@@ -21,8 +20,8 @@ export const getPostCollectionWithDate = <T extends WithFilePath>(posts: T[]): (
     return {
       ...p,
       time: {
-        createdAt: p.data.createdAt ?? stats.birthtime,
-        updatedAt: p.data.updatedAt ?? stats.mtime,
+        createdAt: p.data.createdAt?.getTime() ?? stats.birthtime?.getTime(),
+        updatedAt: p.data.updatedAt?.getTime() ?? stats.mtime?.getTime(),
       }
     }
   })

@@ -6,12 +6,12 @@ const {avatar, github} = siteConfig;
 import '@/styles/animations.css'
 import { getCollection } from "astro:content";
 import { getPostCollectionWithDate } from "@/utils/post";
-import HeaderFooterL from "@/layouts/HeaderFooterL.astro";
-const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) => !data.draft && data.showInPosts)).toSorted((pa, pb) => pb.time.updatedAt.getTime() - pa.time.updatedAt.getTime());
+import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
+const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) => !data.draft && data.showInPosts)).toSorted((pa, pb) => pb.time.updatedAt - pa.time.updatedAt);
 ---
 
 <Layout>
-  <HeaderFooterL gradientBackground>
+  <HeaderFooterLayout gradientBackground>
     <main>
       <div class="banner">
         <img class="avatar" src={avatar} alt="Avatar">
@@ -50,15 +50,15 @@ const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) =>
               <div class="post-title">{post.data.title}</div>
               <div class="post-desc">{post.data.desc}</div>
               <div class="post-meta">
-                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{post.time.createdAt.toLocaleDateString("zh-CN")}</span>
-                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{post.time.updatedAt.toLocaleDateString("zh-CN")}</span>
+                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{new Date(post.time.createdAt).toLocaleDateString("zh-CN")}</span>
+                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}</span>
               </div>
             </a>)}
           </div>
         </section>
       </div>
     </main>
-  </HeaderFooterL>
+  </HeaderFooterLayout>
 </Layout>
 
 <style>

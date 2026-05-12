@@ -1,8 +1,247 @@
 ---
-import Header from "@/components/Header.astro";
 import Layout from "@/layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { getPostCollectionWithDate } from "@/utils/post";
+import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
+import { Icon } from "astro-icon/components";
 
+const posts = getPostCollectionWithDate(
+  await getCollection('posts', ({data}) => !data.draft && data.showInPosts)
+).toSorted((a, b) => b.time.updatedAt - a.time.updatedAt);
+
+const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
 ---
+
 <Layout>
-  <Header></Header>
+  <HeaderFooterLayout gradientBackground>
+    <div class="posts-page">
+      <div class="page-header">
+        <h1>文章</h1>
+        <p class="subtitle">共 {posts.length} 篇</p>
+      </div>
+
+      <div class="filters">
+        <input type="text" class="search-input" placeholder="搜索文章..." />
+        <div class="tag-chips">
+          <button class="chip active" data-tag="">全部</button>
+          {allTags.map(tag => <button class="chip" data-tag={tag}>{tag}</button>)}
+        </div>
+      </div>
+
+      <div class="post-list">
+        {posts.map(post => <a href={`/posts/${post.id}`} class="post-card"
+          data-tags={post.data.tags.join(',')}
+          data-title={post.data.title.toLowerCase()}
+          data-desc={post.data.desc.toLowerCase()}
+        >
+          <div class="card-title">{post.data.title}</div>
+          <div class="card-desc">{post.data.desc}</div>
+          <div class="card-meta">
+            <span class="card-date">
+              <Icon width={14} height={14} name="mdi:calendar-plus" />
+              {new Date(post.time.createdAt).toLocaleDateString("zh-CN")}
+            </span>
+            <span class="card-date">
+              <Icon width={14} height={14} name="mdi:calendar-edit" />
+              {new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}
+            </span>
+          </div>
+          {post.data.tags.length > 0 && <div class="card-tags">
+            {post.data.tags.map((tag: string) => <span class="card-tag">{tag}</span>)}
+          </div>}
+        </a>)}
+      </div>
+
+      <div class="no-results" style="display:none">没有找到匹配的文章</div>
+    </div>
+  </HeaderFooterLayout>
 </Layout>
+
+<script>
+  const cards = document.querySelectorAll<HTMLAnchorElement>('.post-card');
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const searchInput = document.querySelector<HTMLInputElement>('.search-input')!;
+  const noResults = document.querySelector<HTMLDivElement>('.no-results')!;
+
+  let activeTag = '';
+
+  function filterPosts() {
+    const query = searchInput.value.toLowerCase().trim();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const tags = card.dataset.tags ?? '';
+      const title = card.dataset.title ?? '';
+      const desc = card.dataset.desc ?? '';
+
+      const matchesTag = !activeTag || tags.split(',').includes(activeTag);
+      const matchesSearch = !query || title.includes(query) || desc.includes(query);
+
+      const visible = matchesTag && matchesSearch;
+      card.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
+    });
+
+    noResults.style.display = visibleCount === 0 ? '' : 'none';
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeTag = chip.dataset.tag ?? '';
+      filterPosts();
+    });
+  });
+
+  searchInput.addEventListener('input', filterPosts);
+</script>
+
+<style>
+  .posts-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .subtitle {
+      margin-top: 0.25rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+  }
+
+  .filters {
+    margin-bottom: 1.5rem;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    background: #fff;
+    color: #334155;
+    transition: border-color 0.2s;
+    &:focus {
+      border-color: #3b82f6;
+    }
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+
+  .tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+
+  .chip {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover {
+      border-color: #94a3b8;
+      color: #334155;
+    }
+    &.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+  }
+
+  .post-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 1rem 0.875rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-decoration: none;
+    transition: background-color 0.2s;
+    &:first-child {
+      border-top: 1px solid #e2e8f0;
+    }
+    &:hover {
+      background-color: #f8fafc;
+      .card-title {
+        color: #3b82f6;
+      }
+    }
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    transition: color 0.2s;
+  }
+
+  .card-desc {
+    font-size: 0.88rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 12px;
+  }
+
+  .card-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-family: var(--font-cascadia-code);
+    color: #94a3b8;
+  }
+
+  .card-tags {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 2px;
+  }
+
+  .card-tag {
+    padding: 1px 6px;
+    font-size: 0.72rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #94a3b8;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 3rem 0;
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    .posts-page {
+      padding: 1.5rem 1rem 3rem;
+    }
+  }
+</style>
