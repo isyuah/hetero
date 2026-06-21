@@ -1,7 +1,32 @@
 @import "tailwindcss";
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --glass-bg: rgba(0, 0, 0, 0.35);
+  --glass-bg-hover: rgba(0, 0, 0, 0.5);
+  --glass-bg-strong: rgba(0, 0, 0, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.2);
+  --glass-blur: blur(20px);
+  --glass-blur-sm: blur(12px);
+  --glass-radius: 16px;
+  --glass-radius-sm: 10px;
+  --glass-radius-lg: 24px;
+}
+
 body {
   font-family: var(--font-noto-sans-sc);
+  margin: 0;
+  width: 100%;
+  min-height: 100svh;
+  overflow-x: hidden;
 }
 
 a.normal {
@@ -18,4 +43,19 @@ html {
 
 @view-transition {
   navigation: auto;
+}
+
+/* Scrollbar styling for glass theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }

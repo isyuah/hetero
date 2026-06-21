@@ -21,7 +21,6 @@ export const getStaticPaths = (async () => {
 const { post } = Astro.props;
 const {data} = post;
 const {Content, headings} = await render(post);
-
 import "@/styles/markdown.css"
 import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
 import { getPostCollectionWithDate } from "@/utils/post";
@@ -30,13 +29,12 @@ import { Icon } from "astro-icon/components";
 
 <Layout>
   <HeaderFooterLayout gradientBackground>
-    <div class="toc-mask"></div>
     <div class="main">
       <article>
         <h1 class="title">{data.title}</h1>
         <div class="meta">
-          <div class="date-meta">{post.time.updatedAt === post.time.createdAt ? `发布于 ` : `最后更新于 ` + new Date(post.time.updatedAt).toLocaleDateString('zh-CN')}</div>
-          {data.tags.length && <div class="tags">
+          <div class="date-meta">{(post.time.updatedAt === post.time.createdAt ? `发布于 ` : `最后更新于 `) + new Date(post.time.updatedAt).toLocaleDateString('zh-CN')}</div>
+          {data.tags.length > 0 && <div class="tags">
             {data.tags.map(tag => <a href={`/tags/${tag}`} class="tag">{tag}</a>)}
           </div>}
         </div>
@@ -45,17 +43,18 @@ import { Icon } from "astro-icon/components";
           <Content></Content>
         </div>
       </article>
-      <nav class="TOC">
-        <div class="toc-title">TABLE OF CONTENT</div>
-        {headings.filter(h => h.depth < 4).map(heading => {
-          return <a href={`#${heading.slug}`} class={`depth-${heading.depth}`}>{heading.text}</a>
-        })}
-      </nav>
-    </div>
-    <div class="TOC-button">
-      <Icon name="mdi:menu" width={32} height={32}></Icon>
     </div>
   </HeaderFooterLayout>
+  <div class="toc-mask"></div>
+  <nav class="TOC" id="toc">
+    <div class="toc-title">TABLE OF CONTENT</div>
+    {headings.filter(h => h.depth < 4).map(heading => {
+      return <a href={`#${heading.slug}`} class={`depth-${heading.depth}`}>{heading.text}</a>
+    })}
+  </nav>
+  <div class="TOC-button">
+    <Icon name="mdi:menu" width={32} height={32}></Icon>
+  </div>
 </Layout>
 
 <script>
@@ -79,7 +78,7 @@ import { Icon } from "astro-icon/components";
 
 <script>
   const TOCButton = document.querySelector('.TOC-button');
-  const toc = document.querySelector('.TOC');
+  const toc = document.querySelector('#toc');
   const toc_mask = document.querySelector(".toc-mask");
   toc_mask?.addEventListener('click', () => {
     if (toc_mask.classList.contains('open')) {
@@ -97,61 +96,72 @@ import { Icon } from "astro-icon/components";
   .main {
     position: relative;
     display: grid;
-    column-gap: 1rem;
-    grid-template-columns: 1fr 300px;
+    column-gap: 1.5rem;
+    grid-template-columns: 1fr 280px;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    box-sizing: border-box;
   }
   .TOC {
-    align-self: flex-start;
+    position: fixed;
+    right: max(1rem, calc((100vw - 1200px) / 2 + 2rem));
+    top: calc(64px + 1.5rem);
+    width: 260px;
+    max-height: calc(100vh - 64px - 3rem);
     overflow-y: auto;
-    position: sticky;
     display: flex;
     flex-direction: column;
-    top: 4rem;
-    max-height: calc(100vh - 64px - 4rem);
-    margin: 2rem 0;
-    margin-right: 2rem;
-    min-width: 0;
-    border-left: none;
-    padding-left: 0;
+    margin: 1.5rem 0;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
+    padding: 1rem 0;
+    z-index: 10;
 
     .toc-title {
       user-select: none;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #94a3b8;
-      padding: 0.25rem 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      padding: 0.25rem 1rem;
       margin-bottom: 0.25rem;
     }
 
     a {
       position: relative;
-      color: #64748b;
+      color: rgba(255, 255, 255, 0.65);
       font-size: 0.85rem;
       line-height: 1.4;
-      padding: 0.3rem 0.75rem;
-      border-left: 2px solid #e2e8f0;
+      padding: 0.35rem 1rem;
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
       text-decoration: none;
       transition: all 0.2s ease;
+      margin: 0 0.5rem;
     }
     a:hover {
-      color: #334155;
-      background: #f1f5f9;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.08);
+      border-left-color: rgba(255, 255, 255, 0.3);
     }
     a.active {
-      color: #3b82f6;
-      border-left-color: #3b82f6;
-      background: #eff6ff;
+      color: rgba(255, 255, 255, 0.95);
+      border-left-color: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.1);
       font-weight: 500;
     }
-    a.depth-2 { padding-left: 0.75rem; }
-    a.depth-3 { padding-left: 1.5rem; font-size: 0.8rem; }
+    a.depth-2 { padding-left: 1rem; }
+    a.depth-3 { padding-left: 1.75rem; font-size: 0.8rem; }
   }
   .TOC {
     scrollbar-width: thin;
-    scrollbar-color: rgba(150,150,150,0.3) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   }
   .TOC::-webkit-scrollbar {
     width: 4px;
@@ -160,43 +170,53 @@ import { Icon } from "astro-icon/components";
     background: transparent;
   }
   .TOC::-webkit-scrollbar-thumb {
-    background: rgba(150,150,150,0.4);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
   }
   .TOC::-webkit-scrollbar-thumb:hover {
-    background: rgba(150,150,150,0.7);
+    background: rgba(255, 255, 255, 0.5);
   }
 
   article {
     min-width: 0;
-    margin: 2rem 4rem;
-    padding: 1rem;
+    margin: 1.5rem 0;
+    padding: 2.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius-lg);
+    box-shadow: var(--glass-shadow-lg);
 
     .title {
-      color: #22272e;
+      color: rgba(255, 255, 255, 0.95);
       font-size: 2.25rem;
       font-weight: 500;
       margin-bottom: 0.5rem;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
     .meta {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
       margin-bottom: 2rem;
-      color: oklch(44.6% 0.043 257.281);
+      color: rgba(255, 255, 255, 0.55);
 
       .tags {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        .tag {
+          color: rgba(255, 255, 255, 0.55);
+          text-decoration: none;
+          font-size: 0.85rem;
+          transition: color 0.2s;
+        }
         .tag::before {
           content: '# ';
         }
         .tag:hover {
-          display: block;
-          text-decoration: none;
-          cursor: pointer;
-          color: #5082c8;
+          color: rgba(255, 255, 255, 0.9);
         }
       }
     }
@@ -211,7 +231,8 @@ import { Icon } from "astro-icon/components";
     .toc-mask {
       opacity: 0;
       position: fixed;
-      background-color: rgba(0, 0, 0, .4);
+      background-color: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(4px);
       left: 0;
       right: 0;
       top: 0;
@@ -226,22 +247,24 @@ import { Icon } from "astro-icon/components";
     }
     .main {
       grid-template-columns: 1fr;
+      padding: 0 1rem;
     }
     .TOC {
       position: fixed;
       right: 0;
       top: 0;
       height: 100svh;
+      width: auto;
       margin: 0;
       max-width: calc(100vw - 2rem);
       transform: translateX(120%);
       z-index: 102;
       transition: transform .25s, visibility .25s;
-      background-color: #ffffff;
-      box-shadow: 0 0 24px rgba(0, 0, 0, .12);
-      padding: 0.75rem 0;
+      box-shadow: 0 0 48px rgba(0, 0, 0, .3);
+      padding: 1rem 0;
       visibility: hidden;
       max-height: none;
+      border-radius: 0;
     }
     .TOC.open {
       width: fit-content;
@@ -255,17 +278,21 @@ import { Icon } from "astro-icon/components";
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: #5995f5;
-      border: none;
+      background: var(--glass-bg-strong);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-strong);
       color: #ffffff;
-      box-shadow: 0 2px 12px rgba(59,130,246,.3);
+      box-shadow: var(--glass-shadow-lg);
       align-items: center;
       justify-content: center;
       z-index: 100;
       cursor: pointer;
     }
     article {
-      margin: 1rem;
+      margin: 1rem 0;
+      padding: 1.25rem;
+      border-radius: var(--glass-radius);
     }
   }
 </style>

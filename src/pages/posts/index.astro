@@ -3,7 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { getPostCollectionWithDate } from "@/utils/post";
 import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
-import { Icon } from "astro-icon/components";
+import PostCard from "@/components/PostCard.astro";
 
 const posts = getPostCollectionWithDate(
   await getCollection('posts', ({data}) => !data.draft && data.showInPosts)
@@ -29,27 +29,7 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
       </div>
 
       <div class="post-list">
-        {posts.map(post => <a href={`/posts/${post.id}`} class="post-card"
-          data-tags={post.data.tags.join(',')}
-          data-title={post.data.title.toLowerCase()}
-          data-desc={post.data.desc.toLowerCase()}
-        >
-          <div class="card-title">{post.data.title}</div>
-          <div class="card-desc">{post.data.desc}</div>
-          <div class="card-meta">
-            <span class="card-date">
-              <Icon width={14} height={14} name="mdi:calendar-plus" />
-              {new Date(post.time.createdAt).toLocaleDateString("zh-CN")}
-            </span>
-            <span class="card-date">
-              <Icon width={14} height={14} name="mdi:calendar-edit" />
-              {new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}
-            </span>
-          </div>
-          {post.data.tags.length > 0 && <div class="card-tags">
-            {post.data.tags.map((tag: string) => <span class="card-tag">{tag}</span>)}
-          </div>}
-        </a>)}
+        {posts.map(post => <PostCard post={post} />)}
       </div>
 
       <div class="no-results" style="display:none">没有找到匹配的文章</div>
@@ -99,9 +79,11 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
 
 <style>
   .posts-page {
-    max-width: 900px;
+    max-width: 1000px;
+    width: min(92%, 1000px);
     margin: 0 auto;
-    padding: 2rem 2rem 4rem;
+    padding: 2rem 1rem 4rem;
+    box-sizing: border-box;
   }
 
   .page-header {
@@ -109,34 +91,44 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
     h1 {
       font-size: 1.8rem;
       font-weight: 600;
-      color: #1e293b;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
     .subtitle {
       margin-top: 0.25rem;
       font-size: 0.85rem;
-      color: #94a3b8;
+      color: rgba(255, 255, 255, 0.55);
     }
   }
 
   .filters {
     margin-bottom: 1.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius);
+    padding: 1.25rem;
+    box-shadow: var(--glass-shadow);
   }
 
   .search-input {
     width: 100%;
-    padding: 0.6rem 0.8rem;
+    padding: 0.7rem 1rem;
     font-size: 0.9rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
     outline: none;
-    background: #fff;
-    color: #334155;
-    transition: border-color 0.2s;
-    &:focus {
-      border-color: #3b82f6;
-    }
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.25s;
     &::placeholder {
-      color: #94a3b8;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    &:focus {
+      border-color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
     }
   }
 
@@ -148,94 +140,38 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
   }
 
   .chip {
-    padding: 0.25rem 0.65rem;
+    padding: 0.3rem 0.8rem;
     font-size: 0.8rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 999px;
-    background: #fff;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     transition: all 0.2s;
     &:hover {
-      border-color: #94a3b8;
-      color: #334155;
+      border-color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.15);
     }
     &.active {
-      background: #3b82f6;
-      border-color: #3b82f6;
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
       color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     }
   }
 
   .post-list {
     display: flex;
     flex-direction: column;
-  }
-
-  .post-card {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 1rem 0.875rem;
-    border-bottom: 1px solid #e2e8f0;
-    text-decoration: none;
-    transition: background-color 0.2s;
-    &:first-child {
-      border-top: 1px solid #e2e8f0;
-    }
-    &:hover {
-      background-color: #f8fafc;
-      .card-title {
-        color: #3b82f6;
-      }
-    }
-  }
-
-  .card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    transition: color 0.2s;
-  }
-
-  .card-desc {
-    font-size: 0.88rem;
-    color: #64748b;
-    line-height: 1.5;
-  }
-
-  .card-meta {
-    display: flex;
-    gap: 12px;
-  }
-
-  .card-date {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.78rem;
-    font-family: var(--font-cascadia-code);
-    color: #94a3b8;
-  }
-
-  .card-tags {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 2px;
-  }
-
-  .card-tag {
-    padding: 1px 6px;
-    font-size: 0.72rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    color: #94a3b8;
+    gap: 0.5rem;
   }
 
   .no-results {
     text-align: center;
     padding: 3rem 0;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
   }
 

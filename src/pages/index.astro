@@ -7,13 +7,13 @@ import '@/styles/animations.css'
 import { getCollection } from "astro:content";
 import { getPostCollectionWithDate } from "@/utils/post";
 import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
+import PostCard from "@/components/PostCard.astro";
 const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) => !data.draft && data.showInPosts)).toSorted((pa, pb) => pb.time.updatedAt - pa.time.updatedAt);
 ---
 
 <Layout>
   <HeaderFooterLayout gradientBackground>
-    <main>
-      <div class="banner">
+    <div class="banner">
         <img class="avatar" src={avatar} alt="Avatar">
         <div class="username">@isyuah</div>
         <a href={github} target="_blank" class="media">
@@ -46,78 +46,95 @@ const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) =>
         <section class="posts">
           <div class="section-title">Posts</div>
           <div class="content">
-            {posts.map(post => <a href={`/posts/${post.id}`} class="post">
-              <div class="post-title">{post.data.title}</div>
-              <div class="post-desc">{post.data.desc}</div>
-              <div class="post-meta">
-                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{new Date(post.time.createdAt).toLocaleDateString("zh-CN")}</span>
-                <span class="post-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}</span>
-              </div>
-            </a>)}
+            {posts.map(post => <PostCard post={post} />)}
           </div>
         </section>
       </div>
-    </main>
   </HeaderFooterLayout>
 </Layout>
 
 <style>
   .banner {
-    padding-top: 64px;
+    padding: 2rem 0 4rem;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 1.5rem;
     img.avatar {
       width: 108px;
       height: 108px;
-      padding: 6px;
-      border: 1px solid #ccc;
-      background-color: #fff;
+      padding: 4px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      background: transparent;
       border-radius: 50%;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      object-fit: cover;
     }
     .username {
-      margin-top: 5px;
+      margin-top: -0.25rem;
       font-size: 1.5rem;
       font-family: var(--font-cascadia-code);
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     .media {
-      margin-top: 3px;
+      margin-top: -0.5rem;
       font-family: var(--font-cascadia-code);
       display: flex;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
       cursor: pointer;
-      color: #555;
-      transition: color .2s;
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur-sm);
+      -webkit-backdrop-filter: var(--glass-blur-sm);
+      border: 1px solid var(--glass-border);
+      transition: all .25s;
+      font-size: 0.9rem;
       &:hover {
-        color: #000;
+        color: rgba(255, 255, 255, 1);
+        background: var(--glass-bg-hover);
+        border-color: var(--glass-border-strong);
+        transform: translateY(-1px);
       }
     }
 
 
     & > section {
-      /* align-self: stretch; */
-      margin: 20px 5% 0;
-      padding: 0 5%;
+      margin: 0 5%;
+      padding: 0;
       display: flex;
       gap: clamp(40px, 4vw, 80px);
-      animation: fade-in-from-bottom .5s;
+      animation: fade-in-from-bottom .5s ease both;
+      width: min(90%, 900px);
       .section-title {
         min-width: fit-content;
         font-weight: 700;
         font-size: 1.4rem;
         align-self: flex-start;
-        color: #152b32;
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
       .section-title::before {
         content: '# ';
       }
       .content {
         margin-top: 20px;
+        padding: 1.25rem 1.5rem;
         white-space: pre-wrap;
         width: clamp(0px, 50vw, 850px);
         min-width: 0;
-        color: #334155;
+        color: rgba(255, 255, 255, 0.85);
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--glass-radius);
+        box-shadow: var(--glass-shadow);
+        line-height: 1.75;
       }
     }
   }
@@ -136,92 +153,72 @@ const posts = getPostCollectionWithDate(await getCollection('posts', ({data}) =>
       flex-wrap: wrap;
       gap: 8px;
       .tag {
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: 1px solid #5082c8;
-        color: #5082c8;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.1);
         font-size: 0.85rem;
         letter-spacing: 0.2px;
         white-space: nowrap;
-        transition: all .2s;
+        text-decoration: none;
+        transition: all .25s;
       }
       a.tag {
         cursor: pointer;
       }
     }
     &:nth-child(2) .tag {
-      color: #41a97a;
-      border-color: #41a97a;
+      border-color: rgba(129, 230, 180, 0.5);
+      color: rgba(190, 255, 220, 0.95);
     }
     &:nth-child(3) .tag {
-      color: #7142b3;
-      border-color: #7142b3;
+      border-color: rgba(180, 160, 230, 0.5);
+      color: rgba(210, 195, 255, 0.95);
     }
   }
   .banner section.skills .content .type .type-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
     letter-spacing: 0.2px;
   }
   .banner section.skills .content .type .type-content .tag:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
 
   .banner section.posts .content {
     display: flex;
     flex-direction: column;
-    .post {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 16px 14px;
-      width: 100%;
-      border-bottom: 1px solid #e2e8f0;
-      transition: background-color .2s;
-      &:first-child {
-        border-top: 1px solid #e2e8f0;
-      }
-      &:hover {
-        background-color: #f1f5f9;
-      }
-      .post-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1e293b;
-      }
-      .post-desc {
-        font-size: 0.88rem;
-        color: #64748b;
-        line-height: 1.5;
-      }
-      .post-meta {
-        display: flex;
-        gap: 12px;
-      }
-      .post-date {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.78rem;
-        font-family: var(--font-cascadia-code);
-        color: #94a3b8;
-      }
-    }
+    gap: 0.5rem;
+    padding: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
   }
   @media (max-width: 768px) {
+    .banner {
+      padding: 1rem 0 2rem;
+    }
     .banner section {
       width: 100%;
       margin-left: 0;
       margin-right: 0;
-      padding: 0 1rem;
+      padding: 0 0.75rem;
       flex-direction: column;
-      gap: 18px;
+      gap: 10px;
       .content {
         margin-top: 0px;
       }
       .content{
         width: 100%;
+        padding: 1rem;
       }
     }
   }

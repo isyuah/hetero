@@ -1,0 +1,96 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface PostCardData {
+  id: string;
+  data: {
+    title: string;
+    desc: string;
+    tags: string[];
+  };
+  time: {
+    createdAt: number;
+    updatedAt: number;
+  };
+}
+
+const { post } = Astro.props;
+---
+
+<a href={`/posts/${post.id}`} class="post-card"
+  data-tags={post.data.tags.join(',')}
+  data-title={post.data.title.toLowerCase()}
+  data-desc={post.data.desc.toLowerCase()}
+>
+  <div class="card-title">{post.data.title}</div>
+  <div class="card-desc">{post.data.desc}</div>
+  {post.data.tags.length > 0 && <div class="card-tags">
+    {post.data.tags.map((tag: string) => <span class="card-tag">{tag}</span>)}
+  </div>}
+  <div class="card-meta">
+    <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{new Date(post.time.createdAt).toLocaleDateString("zh-CN")}</span>
+    <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}</span>
+  </div>
+</a>
+
+<style>
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px;
+    text-decoration: none;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius-sm);
+    box-shadow: var(--glass-shadow);
+    transition: all 0.25s;
+    &:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-strong);
+      transform: translateX(4px);
+      box-shadow: var(--glass-shadow-lg);
+      .card-title { color: #fff; }
+      .card-desc { color: rgba(255, 255, 255, 0.8); }
+    }
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    transition: color 0.2s;
+  }
+  .card-desc {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+    transition: color .2s;
+  }
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 2px 0;
+  }
+  .card-tag {
+    padding: 1px 8px;
+    font-size: 0.72rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .card-meta {
+    display: flex;
+    gap: 14px;
+    margin-top: 2px;
+  }
+  .card-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.76rem;
+    font-family: var(--font-cascadia-code);
+    color: rgba(255, 255, 255, 0.4);
+  }
+</style>

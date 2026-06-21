@@ -3,7 +3,7 @@
 <header>
   <a class="logo" href="/">
     <svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-      <g id="compass" fill="none" stroke="#2D2E32" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <g id="compass" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="100" cy="40" r="12" />
           <path d="M 100 52 L 40 180" />
           <path d="M 100 52 L 160 180" />
@@ -12,54 +12,69 @@
     </svg>
     <span class="site-name">Hetero</span>
   </a>
-  <div class="nav">
+  <nav class="nav">
     <a href="/" class="item">首页</a>
     <a href="/posts" class="item">文章</a>
-  </div>
+  </nav>
 </header>
 
 <style>
   header {
     view-transition-name: header;
     height: 64px;
-    margin: 0 5%;
-    padding: 0 5%;
+    margin: 0;
+    padding: 0 2rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
   }
   @media (max-width: 768px) {
     header {
-      margin: 0;
       padding: 0 1rem;
     }
   }
   .logo {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
     letter-spacing: 2px;
-    color: #334155
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: color 0.2s;
+    &:hover {
+      color: rgba(255, 255, 255, 1);
+    }
   }
   .site-name {
-    margin-left: 2px;
+    margin-left: 8px;
     font-family: var(--font-cascadia-code);
   }
   .nav {
     height: 100%;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }
   .nav .item {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 500;
-    color: #141415;
-    padding: 10px 10px;
-    transition: all .25s;
-    border-bottom: 2px solid transparent;
-  }
-  .nav .item:hover {
-    border-bottom: 2px solid #334155;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.25s;
+    &:hover {
+      color: rgba(255, 255, 255, 1);
+      background: rgba(255, 255, 255, 0.12);
+    }
   }
 </style>
