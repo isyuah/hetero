@@ -1,0 +1,202 @@
+---
+import { Icon } from "astro-icon/components";
+import { parseGitHubRepoInput } from "@/utils/githubRepo";
+
+interface Props {
+  owner?: string;
+  repo?: string;
+  url?: string;
+  title?: string;
+  desc?: string;
+  icon?: string | false | null;
+  auto?: boolean;
+  showTopics?: boolean;
+}
+
+const {
+  owner,
+  repo,
+  url,
+  title,
+  desc,
+  icon,
+  auto = true,
+  showTopics = true,
+} = Astro.props;
+
+const ref = parseGitHubRepoInput({ owner, repo, url });
+const href = ref?.htmlUrl ?? url ?? "https://github.com";
+const fullName = ref?.fullName ?? repo ?? "GitHub repository";
+const cardTitle = (title ?? fullName).trim() || fullName;
+const cardIcon = icon === false || icon === null ? undefined : icon;
+const hasIcon = typeof cardIcon === "string" && cardIcon.trim().length > 0;
+const isIconUrl = hasIcon && /^(https?:|data:|\/)/i.test(cardIcon);
+---
+
+<a
+  class:list={["mdx-card", "mdx-github-card", !hasIcon && "mdx-card--no-icon"]}
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  referrerpolicy="no-referrer"
+  data-github-repo-card-live
+  data-repo={ref?.fullName}
+  data-url={url}
+  data-auto={String(auto)}
+  data-show-topics={String(showTopics)}
+  data-title-locked={String(title !== undefined)}
+  data-desc-locked={String(desc !== undefined)}
+  data-icon-locked={String(icon !== undefined)}
+>
+  <span class="mdx-card__icon" data-github-icon-wrap hidden={!hasIcon}>
+    {hasIcon && (
+      isIconUrl
+        ? <img src={cardIcon} alt="" loading="lazy" decoding="async" />
+        : <Icon name={cardIcon} width={26} height={26} />
+    )}
+  </span>
+  <span class="mdx-card__body">
+    <span class="mdx-card__title" data-github-title>{cardTitle}</span>
+    <span class="mdx-card__desc" data-github-desc hidden={!desc}>{desc}</span>
+    <span class="mdx-card__meta" data-github-meta></span>
+    <span class="mdx-github-card__topics" data-github-topics hidden></span>
+  </span>
+  <span class="mdx-card__arrow" aria-hidden="true">
+    <Icon name="mdi:github" width={20} height={20} />
+  </span>
+</a>
+
+<script>
+  type GitHubRepoResponse = {
+    ok: boolean;
+    data?: {
+      fullName?: string;
+      htmlUrl?: string;
+      description?: string;
+      language?: string;
+      stargazersCount?: number;
+      forksCount?: number;
+      topics?: string[];
+      updatedAt?: string;
+      pushedAt?: string;
+      ownerAvatar?: string;
+      archived?: boolean;
+    };
+  };
+
+  const compactNumber = (value: number | undefined) => {
+    return new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value ?? 0);
+  };
+
+  const formatDate = (value: string | undefined) => {
+    return value ? new Date(value).toLocaleDateString("zh-CN") : undefined;
+  };
+
+  const appendStat = (meta: HTMLElement, text: string, icon?: string) => {
+    const stat = document.createElement("span");
+    stat.className = "mdx-card__stat";
+    if (icon) {
+      stat.append(icon);
+    }
+    stat.append(text);
+    meta.append(stat);
+  };
+
+  const setGitHubIcon = (card: HTMLElement, iconUrl: string) => {
+    const wrap = card.querySelector<HTMLElement>("[data-github-icon-wrap]");
+    if (!wrap) return;
+
+    wrap.replaceChildren();
+    const img = document.createElement("img");
+    img.src = iconUrl;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.addEventListener("error", () => {
+      wrap.hidden = true;
+      card.classList.add("mdx-card--no-icon");
+    });
+    wrap.append(img);
+    wrap.hidden = false;
+    card.classList.remove("mdx-card--no-icon");
+  };
+
+  const hydrateGitHubRepoCards = async () => {
+    const cards = document.querySelectorAll<HTMLElement>("[data-github-repo-card-live]:not([data-live-ready])");
+
+    for (const card of cards) {
+      card.dataset.liveReady = "true";
+      if (card.dataset.auto !== "true") continue;
+
+      const params = new URLSearchParams();
+      if (card.dataset.repo) params.set("repo", card.dataset.repo);
+      if (card.dataset.url) params.set("url", card.dataset.url);
+      if (!params.size) continue;
+
+      try {
+        const response = await fetch(`/api/github-repo.json?${params.toString()}`);
+        const payload = await response.json() as GitHubRepoResponse;
+        const data = payload.data;
+        if (!payload.ok || !data) continue;
+
+        if (data.htmlUrl) {
+          (card as HTMLAnchorElement).href = data.htmlUrl;
+        }
+
+        if (card.dataset.titleLocked !== "true" && data.fullName) {
+          const title = card.querySelector<HTMLElement>("[data-github-title]");
+          if (title) title.textContent = data.fullName;
+        }
+
+        if (card.dataset.descLocked !== "true" && data.description) {
+          const desc = card.querySelector<HTMLElement>("[data-github-desc]");
+          if (desc) {
+            desc.textContent = data.description;
+            desc.hidden = false;
+          }
+        }
+
+        if (card.dataset.iconLocked !== "true" && data.ownerAvatar) {
+          setGitHubIcon(card, data.ownerAvatar);
+        }
+
+        const meta = card.querySelector<HTMLElement>("[data-github-meta]");
+        if (meta) {
+          meta.replaceChildren();
+          if (data.language) appendStat(meta, data.language);
+          appendStat(meta, compactNumber(data.stargazersCount), "Stars ");
+          appendStat(meta, compactNumber(data.forksCount), "Forks ");
+          const updatedAt = formatDate(data.pushedAt ?? data.updatedAt);
+          if (updatedAt) appendStat(meta, `Updated ${updatedAt}`);
+          if (data.archived) {
+            const archived = document.createElement("span");
+            archived.className = "mdx-github-card__state";
+            archived.textContent = "Archived";
+            meta.append(archived);
+          }
+        }
+
+        const topics = card.querySelector<HTMLElement>("[data-github-topics]");
+        if (topics && card.dataset.showTopics === "true" && data.topics?.length) {
+          topics.replaceChildren(
+            ...data.topics.slice(0, 5).map((topic) => {
+              const el = document.createElement("span");
+              el.className = "mdx-github-card__topic";
+              el.textContent = topic;
+              return el;
+            }),
+          );
+          topics.hidden = false;
+        }
+      } catch {
+        // Live cards are progressive enhancement; keep the server-rendered fallback.
+      }
+    }
+  };
+
+  hydrateGitHubRepoCards();
+  document.addEventListener("astro:page-load", hydrateGitHubRepoCards);
+</script>

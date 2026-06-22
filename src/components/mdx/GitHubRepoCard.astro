@@ -1,0 +1,90 @@
+---
+import { Icon } from "astro-icon/components";
+import {
+  formatCompactNumber,
+  formatRepoDate,
+  getGitHubRepoPreview,
+  parseGitHubRepoInput,
+} from "@/utils/githubRepo";
+
+interface Props {
+  owner?: string;
+  repo?: string;
+  url?: string;
+  title?: string;
+  desc?: string;
+  icon?: string | false | null;
+  auto?: boolean;
+  showTopics?: boolean;
+}
+
+const {
+  owner,
+  repo,
+  url,
+  title,
+  desc,
+  icon,
+  auto = true,
+  showTopics = true,
+} = Astro.props;
+
+const ref = parseGitHubRepoInput({ owner, repo, url });
+const preview = auto && ref ? await getGitHubRepoPreview({ owner, repo, url }) : null;
+const href = preview?.htmlUrl ?? ref?.htmlUrl ?? url ?? "https://github.com";
+const fullName = preview?.fullName ?? ref?.fullName ?? repo ?? "GitHub repository";
+const cardTitle = (title ?? fullName).trim() || fullName;
+const cardDesc = desc ?? preview?.description;
+const cardIcon = icon === false || icon === null ? undefined : icon ?? preview?.ownerAvatar;
+const hasIcon = typeof cardIcon === "string" && cardIcon.trim().length > 0;
+const isIconUrl = hasIcon && /^(https?:|data:|\/)/i.test(cardIcon);
+const topics = showTopics ? preview?.topics.slice(0, 5) ?? [] : [];
+const updatedAt = formatRepoDate(preview?.pushedAt ?? preview?.updatedAt);
+---
+
+<a
+  class:list={["mdx-card", "mdx-github-card", !hasIcon && "mdx-card--no-icon"]}
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  referrerpolicy="no-referrer"
+>
+  {hasIcon && (
+    <span class="mdx-card__icon">
+      {isIconUrl
+        ? <img src={cardIcon} alt="" loading="lazy" decoding="async" />
+        : <Icon name={cardIcon} width={26} height={26} />}
+    </span>
+  )}
+  <span class="mdx-card__body">
+    <span class="mdx-card__title">{cardTitle}</span>
+    {cardDesc && <span class="mdx-card__desc">{cardDesc}</span>}
+    <span class="mdx-card__meta">
+      {preview?.language && (
+        <span class="mdx-card__stat">
+          <Icon name="mdi:circle-small" width={18} height={18} />{preview.language}
+        </span>
+      )}
+      {preview && (
+        <>
+          <span class="mdx-card__stat">
+            <Icon name="mdi:star-outline" width={14} height={14} />{formatCompactNumber(preview.stargazersCount)}
+          </span>
+          <span class="mdx-card__stat">
+            <Icon name="mdi:source-fork" width={14} height={14} />{formatCompactNumber(preview.forksCount)}
+          </span>
+        </>
+      )}
+      {updatedAt && <span class="mdx-card__stat">Updated {updatedAt}</span>}
+      {preview?.archived && <span class="mdx-github-card__state">Archived</span>}
+    </span>
+    {topics.length > 0 && (
+      <span class="mdx-github-card__topics">
+        {topics.map((topic) => <span class="mdx-github-card__topic">{topic}</span>)}
+      </span>
+    )}
+  </span>
+  <span class="mdx-card__arrow" aria-hidden="true">
+    <Icon name="mdi:github" width={20} height={20} />
+  </span>
+</a>

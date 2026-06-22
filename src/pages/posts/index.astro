@@ -4,6 +4,7 @@ import { getCollection } from "astro:content";
 import { getPostCollectionWithDate } from "@/utils/post";
 import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
 import PostCard from "@/components/PostCard.astro";
+import PostTagsNav from "@/components/PostTagsNav.astro";
 
 const posts = getPostCollectionWithDate(
   await getCollection('posts', ({data}) => !data.draft && data.showInPosts)
@@ -15,20 +16,18 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
 <Layout>
   <HeaderFooterLayout gradientBackground>
     <div class="posts-page">
-      <div class="page-header">
+      <div class="page-header" transition:name="posts-page-header" transition:animate="fade">
         <h1>文章</h1>
         <p class="subtitle">共 {posts.length} 篇</p>
       </div>
 
-      <div class="filters">
+      <div class="filters" transition:name="posts-filter" transition:animate="fade">
         <input type="text" class="search-input" placeholder="搜索文章..." />
-        <div class="tag-chips">
-          <button class="chip active" data-tag="">全部</button>
-          {allTags.map(tag => <button class="chip" data-tag={tag}>{tag}</button>)}
-        </div>
       </div>
 
-      <div class="post-list">
+      <PostTagsNav allTags={allTags} />
+
+      <div class="post-list" transition:name="posts-list" transition:animate="fade">
         {posts.map(post => <PostCard post={post} />)}
       </div>
 
@@ -38,26 +37,50 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
 </Layout>
 
 <script>
+  import Fuse from "fuse.js";
+
   const cards = document.querySelectorAll<HTMLAnchorElement>('.post-card');
-  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
   const searchInput = document.querySelector<HTMLInputElement>('.search-input')!;
   const noResults = document.querySelector<HTMLDivElement>('.no-results')!;
 
-  let activeTag = '';
+  let fuse: Fuse<any> | null = null;
+
+  const indexPromise = fetch("/search-index.json")
+    .then(res => res.json())
+    .then(posts => {
+      fuse = new Fuse(posts, {
+        includeScore: true,
+        ignoreLocation: true,
+        threshold: 0.35,
+        minMatchCharLength: 2,
+        keys: [
+          { name: "title", weight: 5 },
+          { name: "desc", weight: 3 },
+          { name: "tags", weight: 3 },
+
+          { name: "initials", weight: 4 },
+          { name: "pinyinCompact", weight: 4 },
+          { name: "pinyin", weight: 3 },
+
+          { name: "text", weight: 1.5 },
+        ],
+      });
+    });
 
   function filterPosts() {
     const query = searchInput.value.toLowerCase().trim();
     let visibleCount = 0;
 
+    // Resolve which post IDs match the search query
+    let matchedIds: Set<string> | null = null;
+    if (query && fuse) {
+      matchedIds = new Set(fuse.search(query).map(r => r.item.id));
+    }
+
     cards.forEach(card => {
-      const tags = card.dataset.tags ?? '';
-      const title = card.dataset.title ?? '';
-      const desc = card.dataset.desc ?? '';
+      const matchesSearch = !matchedIds || matchedIds.has(card.dataset.postId ?? '');
 
-      const matchesTag = !activeTag || tags.split(',').includes(activeTag);
-      const matchesSearch = !query || title.includes(query) || desc.includes(query);
-
-      const visible = matchesTag && matchesSearch;
+      const visible = matchesSearch;
       card.style.display = visible ? '' : 'none';
       if (visible) visibleCount++;
     });
@@ -65,16 +88,10 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
     noResults.style.display = visibleCount === 0 ? '' : 'none';
   }
 
-  chips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeTag = chip.dataset.tag ?? '';
-      filterPosts();
-    });
+  searchInput.addEventListener('input', async () => {
+    await indexPromise;
+    filterPosts();
   });
-
-  searchInput.addEventListener('input', filterPosts);
 </script>
 
 <style>
@@ -129,36 +146,6 @@ const allTags = [...new Set(posts.flatMap(p => p.data.tags))].sort();
       border-color: rgba(255, 255, 255, 0.45);
       background: rgba(255, 255, 255, 0.18);
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
-    }
-  }
-
-  .tag-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.75rem;
-  }
-
-  .chip {
-    padding: 0.3rem 0.8rem;
-    font-size: 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    transition: all 0.2s;
-    &:hover {
-      border-color: rgba(255, 255, 255, 0.45);
-      color: rgba(255, 255, 255, 0.9);
-      background: rgba(255, 255, 255, 0.15);
-    }
-    &.active {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.5);
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     }
   }
 

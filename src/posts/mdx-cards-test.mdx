@@ -1,0 +1,145 @@
+---
+title: MDX 卡片组件测试
+desc: 覆盖 LinkCard、LinkCardLive、GitHubRepoCard 和 GitHubRepoCardLive 的自动获取、手动覆盖、无图标与实时刷新场景。
+tags: [MDX, Astro, 组件, 测试]
+createdAt: 2026-06-22
+updatedAt: 2026-06-22
+---
+
+import LinkCard from "@/components/mdx/LinkCard.astro";
+import LinkCardLive from "@/components/mdx/LinkCardLive.astro";
+import GitHubRepoCard from "@/components/mdx/GitHubRepoCard.astro";
+import GitHubRepoCardLive from "@/components/mdx/GitHubRepoCardLive.astro";
+
+这篇文章用于测试 MDX 高级卡片组件的不同模式。它不会验证业务内容，只验证组件在文章排版中的显示、降级和交互表现。
+
+## LinkCard
+
+### 自动获取网站信息
+
+只传 `url`，组件会在构建时尝试获取标题、描述和 favicon。请求失败时会降级到域名和 `/favicon.ico`。
+
+<LinkCard url="https://astro.build" />
+
+<LinkCard url="https://developer.mozilla.org/zh-CN/" />
+
+### 覆盖标题、描述和图标
+
+自动获取仍然开启，但传入的字段会覆盖抓取结果。
+
+<LinkCard
+  url="https://astro.build"
+  title="Astro 官方网站"
+  desc="用于构建内容驱动网站的 Web 框架。"
+  icon="mdi:rocket-launch"
+/>
+
+### 禁用自动获取
+
+`auto={false}` 时不会抓取远程页面。没有提供 icon 时，卡片会使用无图标布局。
+
+<LinkCard
+  url="https://example.com"
+  auto={false}
+  title="手动配置的链接"
+  desc="这个卡片不会自动获取 favicon、标题或描述。"
+/>
+
+### 显式隐藏图标
+
+即使自动获取到了 favicon，也可以用 `icon={false}` 强制隐藏图标。
+
+<LinkCard
+  url="https://github.com"
+  title="GitHub 无图标链接"
+  desc="测试 icon=false 时的布局。"
+  icon={false}
+/>
+
+## LinkCardLive
+
+Live 版本会先渲染静态兜底内容，再在浏览器中请求站内 API 刷新数据。
+
+<LinkCardLive url="https://astro.build" />
+
+<LinkCardLive
+  url="https://developer.mozilla.org/zh-CN/docs/Web"
+  title="MDN Web 文档"
+  icon="mdi:web"
+/>
+
+<LinkCardLive
+  url="https://example.com"
+  auto={false}
+  title="禁用实时抓取"
+  desc="这个 Live 卡片也可以完全手动配置。"
+/>
+
+## GitHubRepoCard
+
+### 自动获取仓库信息
+
+只传 `repo`，组件会在构建时通过 GitHub API 获取描述、语言、stars、forks、topics 和头像。构建环境可选配置 `GITHUB_TOKEN` 来提高 API 限额。
+
+<GitHubRepoCard repo="withastro/astro" />
+
+<GitHubRepoCard owner="vitejs" repo="vite" />
+
+### 覆盖展示内容
+
+仓库数据仍然会获取，但标题、描述和图标可以被手动覆盖。
+
+<GitHubRepoCard
+  repo="microsoft/TypeScript"
+  title="TypeScript"
+  desc="JavaScript with syntax for types.XX"
+  icon="mdi:language-typescript"
+/>
+
+### 禁用自动获取
+
+`auto={false}` 时不会请求 GitHub API，适合只想展示一个稳定链接的场景。
+
+<GitHubRepoCard
+  repo="facebook/react"
+  auto={false}
+  title="React 仓库"
+  desc="手动展示仓库卡片，不读取 GitHub 实时数据。"
+  icon={false}
+/>
+
+## GitHubRepoCardLive
+
+Live 版本适合希望访问时刷新仓库数据的场景。它会调用站内 `/api/github-repo.json`，服务端再访问 GitHub API。
+
+<GitHubRepoCardLive repo="withastro/astro" />
+
+<GitHubRepoCardLive
+  owner="vitejs"
+  repo="vite"
+  title="Vite 实时仓库卡片"
+/>
+
+<GitHubRepoCardLive
+  repo="microsoft/TypeScript"
+  auto={false}
+  title="禁用实时刷新的仓库卡片"
+  desc="这个卡片只保留手动配置的展示内容。"
+/>
+
+## 混排检查
+
+普通段落、列表和卡片混排时，间距应该保持稳定。
+
+- 卡片上方和下方应有一致的文章节奏。
+- 无图标卡片不应留下空白占位。
+- 长标题、长描述和多个 topics 不应撑破文章容器。
+
+<LinkCard
+  url="https://docs.astro.build/zh-cn/guides/content-collections/"
+  title="Astro Content Collections 文档"
+  desc="这是一段较长的描述，用来测试卡片摘要两行截断效果，以及在移动端窄屏布局下是否仍然保持稳定。但是宽度不太够，所以我要写一些测试文本： 继续添加一些文本来确保描述足够长，以触发截断效果。最后，这段描述应该在两行内结束，并显示省略号。"
+  icon="mdi:file-document-outline"
+/>
+
+测试完成后，可以从文章列表进入这篇文章，检查桌面端 TOC、移动端目录抽屉、卡片 hover 状态和 Live 卡片刷新结果。

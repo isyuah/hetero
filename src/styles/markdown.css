@@ -35,7 +35,7 @@
     margin: 0.6rem 0;
   }
 
-  a {
+  a:not(.mdx-card) {
     margin: 0 2px;
     cursor: pointer;
     text-decoration: none;
@@ -44,11 +44,11 @@
     color: rgba(180, 210, 255, 0.9);
     padding-bottom: 2px;
   }
-  a:hover {
+  a:not(.mdx-card):hover {
     border-bottom: 2px dashed rgba(180, 210, 255, 0.7);
     color: rgba(200, 225, 255, 1);
   }
-  a[target="_blank"] {
+  a[target="_blank"]:not(.mdx-card) {
     padding-right: 18px;
     background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%2390c0f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>') no-repeat center right;
   }

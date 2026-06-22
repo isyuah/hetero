@@ -35,7 +35,7 @@ import { Icon } from "astro-icon/components";
         <div class="meta">
           <div class="date-meta">{(post.time.updatedAt === post.time.createdAt ? `发布于 ` : `最后更新于 `) + new Date(post.time.updatedAt).toLocaleDateString('zh-CN')}</div>
           {data.tags.length > 0 && <div class="tags">
-            {data.tags.map(tag => <a href={`/tags/${tag}`} class="tag">{tag}</a>)}
+            {data.tags.map(tag => <a href={`/posts/tags/${encodeURIComponent(tag)}`} class="tag">{tag}</a>)}
           </div>}
         </div>
 
@@ -57,39 +57,55 @@ import { Icon } from "astro-icon/components";
   </div>
 </Layout>
 
-<script>
-  const headingsEl = document.querySelectorAll('article h1, article h2, article h3');
-  const ob = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      const link = document.querySelector(`.TOC a[href="#${entry.target.id}"]`)
-      if (!link) return;
-      if (entry.isIntersecting) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    })
-  }, {
-    rootMargin: '0px 0px -40% 0px',
-    threshold: 0,
-  })
-  headingsEl.forEach(e => ob.observe(e))
-</script>
+<script is:inline data-astro-rerun>
+  (() => {
+    window.__postTocCleanup?.();
 
-<script>
-  const TOCButton = document.querySelector('.TOC-button');
-  const toc = document.querySelector('#toc');
-  const toc_mask = document.querySelector(".toc-mask");
-  toc_mask?.addEventListener('click', () => {
-    if (toc_mask.classList.contains('open')) {
-      toc?.classList.toggle('open')
-      toc_mask?.classList.toggle('open')
-    }
-  })
-  TOCButton?.addEventListener('click', () => {
-    toc?.classList.toggle('open')
-    toc_mask?.classList.toggle('open')
-  })
+    const toc = document.querySelector('#toc');
+    const tocMask = document.querySelector('.toc-mask');
+    const tocButton = document.querySelector('.TOC-button');
+    const headings = document.querySelectorAll('article h1[id], article h2[id], article h3[id]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const link = document.querySelector(`.TOC a[href="#${entry.target.id}"]`);
+        if (!link) return;
+
+        link.classList.toggle('active', entry.isIntersecting);
+      });
+    }, {
+      rootMargin: '0px 0px -40% 0px',
+      threshold: 0,
+    });
+
+    headings.forEach((heading) => observer.observe(heading));
+
+    const closeToc = () => {
+      toc?.classList.remove('open');
+      tocMask?.classList.remove('open');
+    };
+
+    const toggleToc = () => {
+      toc?.classList.toggle('open');
+      tocMask?.classList.toggle('open');
+    };
+
+    tocMask?.addEventListener('click', closeToc);
+    tocButton?.addEventListener('click', toggleToc);
+    toc?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeToc);
+    });
+
+    window.__postTocCleanup = () => {
+      observer.disconnect();
+      tocMask?.removeEventListener('click', closeToc);
+      tocButton?.removeEventListener('click', toggleToc);
+      toc?.querySelectorAll('a').forEach((link) => {
+        link.removeEventListener('click', closeToc);
+      });
+      delete window.__postTocCleanup;
+    };
+  })();
 </script>
 
 <style>
@@ -161,20 +177,22 @@ import { Icon } from "astro-icon/components";
   }
   .TOC {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
   }
   .TOC::-webkit-scrollbar {
     width: 4px;
+    background: transparent;
   }
   .TOC::-webkit-scrollbar-track {
     background: transparent;
+    border: none;
   }
   .TOC::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: 2px;
   }
   .TOC::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.6);
   }
 
   article {

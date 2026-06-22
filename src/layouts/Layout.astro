@@ -1,6 +1,19 @@
 ---
 import { Font } from 'astro:assets'
 import '@/styles/global.css'
+import '@/styles/mdx-cards.css'
+
+import SEO from '@/components/SEO.astro'
+import { ClientRouter } from 'astro:transitions';
+
+const {
+  title,
+  description,
+  image,
+  type,
+  publishedTime,
+  modifiedTime,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -11,7 +24,15 @@ import '@/styles/global.css'
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Hetero</title>
+		<SEO 
+			title={title}
+			description={description}
+			image={image}
+			type={type}
+			publishedTime={publishedTime}
+			modifiedTime={modifiedTime}
+		/>
+
 		<Font preload cssVariable='--font-noto-sans-sc'></Font>
 		<Font preload cssVariable='--font-cascadia-code'></Font>
 	</head>

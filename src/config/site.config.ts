@@ -1,4 +1,7 @@
 export interface SiteConfig {
+  siteName: string;
+  siteDescription: string;
+  username: string;
   avatar: string;
   github: string;
   shortAbout: string;
@@ -14,6 +17,9 @@ interface SkillType {
 }
 
 export default {
+  siteName: 'Hetero',
+  siteDescription: '一个记录技术、开发、游戏和思考的个人博客',
+  username: 'isyuah',
   avatar: 'https://r2.oss.isyuah.top/avatar.jpeg',
   github: 'https://github.com/isyuah',
   shortAbout: `一个前端开发人员，喜欢用 Vue

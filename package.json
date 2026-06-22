@@ -20,16 +20,16 @@
     "@astrojs/sitemap": "^3.7.3",
     "@expressive-code/plugin-collapsible-sections": "^0.42.0",
     "@expressive-code/plugin-line-numbers": "^0.42.0",
-    "@tailwindcss/vite": "^4.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "^6.4.8",
     "astro-expressive-code": "^0.42.0",
     "astro-icon": "^1.1.5",
+    "fuse.js": "^7.4.2",
+    "pinyin-pro": "^3.28.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "rehype-external-links": "^3.0.0",
-    "tailwindcss": "^4.2.4"
+    "rehype-external-links": "^3.0.0"
   },
   "devDependencies": {
     "@edgeone/astro": "^1.1.2",

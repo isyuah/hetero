@@ -3,7 +3,7 @@ import Header from "@/components/Header.astro";
 import Footer from '@/components/Footer.astro'
 const { gradientBackground } = Astro.props
 ---
-{gradientBackground && <div class="gradient"></div>}
+<div class="gradient" transition:name="background" transition:persist></div>
 <div class="layout">
   <Header></Header>
   <main>

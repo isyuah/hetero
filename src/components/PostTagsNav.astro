@@ -1,0 +1,104 @@
+---
+interface Props {
+  allTags: string[];
+  activeTag?: string;
+}
+
+const { allTags, activeTag = "" } = Astro.props;
+---
+
+<nav
+  class="post-tags-nav"
+  aria-label="文章标签"
+  data-post-tags-nav
+  transition:name="post-tags-nav"
+  transition:animate="none"
+  transition:persist
+>
+  <a
+    class:list={["tag-chip", !activeTag && "active"]}
+    href="/posts"
+    aria-current={!activeTag ? "page" : undefined}
+    data-tag-link
+  >
+    全部
+  </a>
+  {allTags.map((tag) => (
+    <a
+      class:list={["tag-chip", tag === activeTag && "active"]}
+      href={`/posts/tags/${encodeURIComponent(tag)}`}
+      aria-current={tag === activeTag ? "page" : undefined}
+      data-tag-link
+    >
+      {tag}
+    </a>
+  ))}
+</nav>
+
+<script>
+  const normalizePath = (path: string) => {
+    return path.replace(/\/+$/, "") || "/";
+  };
+
+  const syncPostTagsNav = () => {
+    const currentPath = normalizePath(window.location.pathname);
+
+    document.querySelectorAll("[data-post-tags-nav]").forEach((nav) => {
+      nav.querySelectorAll<HTMLAnchorElement>("[data-tag-link]").forEach((link) => {
+        const linkPath = normalizePath(new URL(link.href).pathname);
+        const active = linkPath === currentPath;
+
+        link.classList.toggle("active", active);
+        if (active) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    });
+  };
+
+  syncPostTagsNav();
+  document.addEventListener("astro:page-load", syncPostTagsNav);
+</script>
+
+<style>
+  .post-tags-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .tag-chip {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    &.active {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+</style>

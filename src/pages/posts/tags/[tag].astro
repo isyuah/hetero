@@ -1,0 +1,101 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
+import PostCard from "@/components/PostCard.astro";
+import PostTagsNav from "@/components/PostTagsNav.astro";
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import { getPostCollectionWithDate } from "@/utils/post";
+
+export const getStaticPaths = (async () => {
+  const posts = getPostCollectionWithDate(
+    await getCollection("posts", ({ data }) => !data.draft && data.showInPosts),
+  ).toSorted((a, b) => b.time.updatedAt - a.time.updatedAt);
+
+  const allTags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+
+  return allTags.map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      allTags,
+      posts: posts.filter((post) => post.data.tags.includes(tag)),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { tag, posts, allTags } = Astro.props;
+const pageTitle = `标签：${tag}`;
+const pageDescription = `共 ${posts.length} 篇与 ${tag} 相关的文章`;
+---
+
+<Layout title={`${pageTitle} - Hetero`} description={pageDescription}>
+  <HeaderFooterLayout gradientBackground>
+    <div class="tag-page">
+      <div class="page-header" transition:name="posts-page-header" transition:animate="fade">
+        <a class="back-link" href="/posts">← 返回文章列表</a>
+        <h1>{pageTitle}</h1>
+        <p class="subtitle">{pageDescription}</p>
+      </div>
+
+      <PostTagsNav allTags={allTags} activeTag={tag} />
+
+      <div class="post-list" transition:name="posts-list" transition:animate="fade">
+        {posts.map((post) => <PostCard post={post} />)}
+      </div>
+    </div>
+  </HeaderFooterLayout>
+</Layout>
+
+<style>
+  .tag-page {
+    max-width: 1000px;
+    width: min(92%, 1000px);
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+    box-sizing: border-box;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+
+    h1 {
+      margin: 0.4rem 0 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .subtitle {
+      margin-top: 0.25rem;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.55);
+    }
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.86rem;
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .tag-page {
+      padding: 1.5rem 1rem 3rem;
+    }
+  }
+</style>

@@ -1,0 +1,84 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  publishedTime?: Date | string;
+  modifiedTime?: Date | string;
+  author?: string;
+}
+
+import siteConfig from "@/config/site.config";
+
+const {
+  title = siteConfig.siteName,
+  description = siteConfig.siteDescription,
+  image = "/og-default.png",
+  type = "website",
+  publishedTime,
+  modifiedTime,
+  author = siteConfig.username,
+} = Astro.props;
+
+const siteName = siteConfig.siteName;
+
+const pageTitle = title === siteName
+  ? siteName
+  : `${title} - ${siteName}`;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+const imageUrl = new URL(image, Astro.site ?? Astro.url).toString();
+
+const jsonLd = type === "article"
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: title,
+      description,
+      image: imageUrl,
+      url: canonicalUrl,
+      author: {
+        "@type": "Person",
+        name: author,
+      },
+      datePublished: publishedTime
+        ? new Date(publishedTime).toISOString()
+        : undefined,
+      dateModified: modifiedTime
+        ? new Date(modifiedTime).toISOString()
+        : publishedTime
+          ? new Date(publishedTime).toISOString()
+          : undefined,
+      publisher: {
+        "@type": "Person",
+        name: author,
+      },
+    }
+  : {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: siteName,
+      url: new URL("/", Astro.site ?? Astro.url).toString(),
+      description,
+    };
+---
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+
+<link rel="canonical" href={canonicalUrl} />
+
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:image" content={imageUrl} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

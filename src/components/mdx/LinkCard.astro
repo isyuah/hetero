@@ -1,0 +1,47 @@
+---
+import { Icon } from "astro-icon/components";
+import { getLinkPreview, getUrlHostLabel } from "@/utils/linkPreview";
+
+interface Props {
+  url: string;
+  title?: string;
+  desc?: string;
+  icon?: string | false | null;
+  auto?: boolean;
+}
+
+const { url, title, desc, icon, auto = true } = Astro.props;
+const preview = auto ? await getLinkPreview(url) : null;
+const host = getUrlHostLabel(preview?.finalUrl ?? url);
+const cardTitle = (title ?? preview?.title ?? host).trim() || host;
+const cardDesc = desc ?? preview?.desc;
+const cardIcon = icon === false || icon === null ? undefined : icon ?? preview?.icon;
+const hasIcon = typeof cardIcon === "string" && cardIcon.trim().length > 0;
+const isIconUrl = hasIcon && /^(https?:|data:|\/)/i.test(cardIcon);
+---
+
+<a
+  class:list={["mdx-card", "mdx-link-card", !hasIcon && "mdx-card--no-icon"]}
+  href={preview?.finalUrl ?? url}
+  target="_blank"
+  rel="noopener noreferrer"
+  referrerpolicy="no-referrer"
+>
+  {hasIcon && (
+    <span class="mdx-card__icon">
+      {isIconUrl
+        ? <img src={cardIcon} alt="" loading="lazy" decoding="async" />
+        : <Icon name={cardIcon} width={26} height={26} />}
+    </span>
+  )}
+  <span class="mdx-card__body">
+    <span class="mdx-card__title">{cardTitle}</span>
+    {cardDesc && <span class="mdx-card__desc">{cardDesc}</span>}
+    <span class="mdx-card__meta">
+      <span class="mdx-card__host">{host}</span>
+    </span>
+  </span>
+  <span class="mdx-card__arrow" aria-hidden="true">
+    <Icon name="mdi:open-in-new" width={18} height={18} />
+  </span>
+</a>

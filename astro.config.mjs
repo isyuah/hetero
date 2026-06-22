@@ -2,7 +2,6 @@
 import { defineConfig, fontProviders } from 'astro/config';
 
 import react from '@astrojs/react';
-import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import node from '@astrojs/node';
 import expressiveCode from 'astro-expressive-code';
@@ -38,7 +37,7 @@ export default defineConfig({
   }],
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [],
     resolve: {
       alias: {
         "@": "/src"
@@ -52,5 +51,5 @@ export default defineConfig({
   // adapter: node({
   //   mode: 'standalone'
   // }),
-  adapter: edgeoneAda()
+  adapter: edgeoneAda(),
 });
