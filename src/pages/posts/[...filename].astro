@@ -22,9 +22,11 @@ const { post } = Astro.props;
 const {data} = post;
 const {Content, headings} = await render(post);
 import "@/styles/markdown.css"
+import "photoswipe/dist/photoswipe.css";
 import HeaderFooterLayout from "@/layouts/HeaderFooterLayout.astro";
 import { getPostCollectionWithDate } from "@/utils/post";
 import { Icon } from "astro-icon/components";
+import Callout from "@/components/mdx/Callout.astro";
 ---
 
 <Layout>
@@ -39,8 +41,14 @@ import { Icon } from "astro-icon/components";
           </div>}
         </div>
 
+        {data.cover && data.showCoverInPost && (
+          <div class="post-cover">
+            <img src={data.cover} alt="" loading="eager" decoding="async" />
+          </div>
+        )}
+
         <div class="MARKDOWN">
-          <Content></Content>
+          <Content components={{ Callout }}></Content>
         </div>
       </article>
     </div>
@@ -106,6 +114,149 @@ import { Icon } from "astro-icon/components";
       delete window.__postTocCleanup;
     };
   })();
+</script>
+
+<script>
+  import PhotoSwipe from "photoswipe";
+  import PhotoSwipeLightbox from "photoswipe/lightbox";
+  import type { DataSource, Padding, Point } from "photoswipe";
+
+  const photoSwipeWindow = window as Window & {
+    __markdownPhotoSwipeCleanup?: () => void;
+    __markdownPhotoSwipeInitBound?: boolean;
+  };
+
+  const getPositiveInteger = (value: string | null) => {
+    const parsed = Number.parseInt(value ?? "", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
+
+  const getImageDimensions = (image: HTMLImageElement) => {
+    const rect = image.getBoundingClientRect();
+    const width =
+      image.naturalWidth ||
+      getPositiveInteger(image.getAttribute("width")) ||
+      Math.round(rect.width) ||
+      1600;
+    const height =
+      image.naturalHeight ||
+      getPositiveInteger(image.getAttribute("height")) ||
+      Math.round(rect.height) ||
+      Math.round(width * 0.625);
+
+    return { width, height };
+  };
+
+  const getMarkdownImages = () =>
+    [...document.querySelectorAll<HTMLImageElement>(".MARKDOWN img")]
+      .filter((image) => !image.closest("a"));
+
+  const initMarkdownPhotoSwipe = () => {
+    photoSwipeWindow.__markdownPhotoSwipeCleanup?.();
+
+    const images = getMarkdownImages();
+    if (images.length === 0) {
+      photoSwipeWindow.__markdownPhotoSwipeCleanup = () => {
+        delete photoSwipeWindow.__markdownPhotoSwipeCleanup;
+      };
+      return;
+    }
+
+    const lightbox = new PhotoSwipeLightbox({
+      pswpModule: PhotoSwipe,
+      bgOpacity: 0.88,
+      wheelToZoom: true,
+      preloaderDelay: 0,
+      showHideAnimationType: "fade",
+      showAnimationDuration: 180,
+      hideAnimationDuration: 180,
+      zoomAnimationDuration: 220,
+      pinchToClose: false,
+      bgClickAction: "close",
+      imageClickAction: "zoom-or-close",
+      doubleTapAction: "zoom",
+      paddingFn: (viewportSize: Point): Padding => {
+        const isNarrow = viewportSize.x < 768;
+        return {
+          top: isNarrow ? 16 : 32,
+          right: isNarrow ? 12 : 32,
+          bottom: isNarrow ? 16 : 32,
+          left: isNarrow ? 12 : 32,
+        };
+      },
+      errorMsg: "图片加载失败",
+      closeTitle: "关闭",
+      zoomTitle: "缩放",
+      arrowPrevTitle: "上一张",
+      arrowNextTitle: "下一张",
+    });
+
+    const buildDataSource = (): DataSource =>
+      images.map((image) => {
+        const { width, height } = getImageDimensions(image);
+        return {
+          src: image.currentSrc || image.src,
+          srcset: image.srcset || undefined,
+          msrc: image.currentSrc || image.src,
+          width,
+          height,
+          alt: image.alt || "",
+          element: image,
+        };
+      });
+
+    const openImage = (image: HTMLImageElement, initialPoint: Point | null) => {
+      const index = images.indexOf(image);
+      if (index < 0) return;
+
+      lightbox.loadAndOpen(index, buildDataSource(), initialPoint);
+    };
+
+    const onImageClick = (event: MouseEvent) => {
+      event.preventDefault();
+      openImage(event.currentTarget as HTMLImageElement, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+
+    const onImageKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      event.preventDefault();
+      openImage(event.currentTarget as HTMLImageElement, null);
+    };
+
+    images.forEach((image) => {
+      image.classList.add("is-lightboxable");
+      image.tabIndex = 0;
+      image.setAttribute("role", "button");
+      image.setAttribute("aria-label", image.alt ? `查看图片：${image.alt}` : "查看图片");
+      image.addEventListener("click", onImageClick);
+      image.addEventListener("keydown", onImageKeydown);
+    });
+
+    lightbox.init();
+
+    photoSwipeWindow.__markdownPhotoSwipeCleanup = () => {
+      images.forEach((image) => {
+        image.classList.remove("is-lightboxable");
+        image.removeAttribute("role");
+        image.removeAttribute("aria-label");
+        image.removeAttribute("tabindex");
+        image.removeEventListener("click", onImageClick);
+        image.removeEventListener("keydown", onImageKeydown);
+      });
+      lightbox.destroy();
+      delete photoSwipeWindow.__markdownPhotoSwipeCleanup;
+    };
+  };
+
+  if (!photoSwipeWindow.__markdownPhotoSwipeInitBound) {
+    initMarkdownPhotoSwipe();
+    document.addEventListener("astro:page-load", initMarkdownPhotoSwipe);
+    photoSwipeWindow.__markdownPhotoSwipeInitBound = true;
+  }
 </script>
 
 <style>
@@ -217,7 +368,7 @@ import { Icon } from "astro-icon/components";
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.75rem;
       color: rgba(255, 255, 255, 0.55);
 
       .tags {
@@ -238,6 +389,28 @@ import { Icon } from "astro-icon/components";
         }
       }
     }
+  }
+
+  .post-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 0 0 2rem;
+    overflow: hidden;
+    line-height: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--glass-radius);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .post-cover img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .TOC-button {
@@ -312,5 +485,13 @@ import { Icon } from "astro-icon/components";
       padding: 1.25rem;
       border-radius: var(--glass-radius);
     }
+    .post-cover {
+      margin-bottom: 1.5rem;
+      border-radius: var(--glass-radius-sm);
+    }
+  }
+
+  :global(.MARKDOWN img.is-lightboxable) {
+    cursor: zoom-in;
   }
 </style>

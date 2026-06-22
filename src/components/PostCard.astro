@@ -5,6 +5,7 @@ export interface PostCardData {
   id: string;
   data: {
     title: string;
+    cover?: string;
     desc: string;
     tags: string[];
   };
@@ -15,31 +16,39 @@ export interface PostCardData {
 }
 
 const { post } = Astro.props;
+const hasCover = Boolean(post.data.cover);
 ---
 
 <a href={`/posts/${post.id}`} class="post-card"
+  class:list={[hasCover && 'has-cover']}
   data-post-id={post.id}
   data-tags={post.data.tags.join(',')}
   data-title={post.data.title.toLowerCase()}
   data-desc={post.data.desc.toLowerCase()}
 >
-  <div class="card-title">{post.data.title}</div>
-  <div class="card-desc">{post.data.desc}</div>
-  {post.data.tags.length > 0 && <div class="card-tags">
-    {post.data.tags.map((tag: string) => <span class="card-tag">{tag}</span>)}
-  </div>}
-  <div class="card-meta">
-    <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{new Date(post.time.createdAt).toLocaleDateString("zh-CN")}</span>
-    <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}</span>
+  {hasCover && (
+    <div class="card-cover">
+      <img src={post.data.cover} alt="" loading="lazy" decoding="async" />
+    </div>
+  )}
+  <div class="card-content">
+    <div class="card-title">{post.data.title}</div>
+    <div class="card-desc">{post.data.desc}</div>
+    {post.data.tags.length > 0 && <div class="card-tags">
+      {post.data.tags.map((tag: string) => <span class="card-tag">{tag}</span>)}
+    </div>}
+    <div class="card-meta">
+      <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-plus" />{new Date(post.time.createdAt).toLocaleDateString("zh-CN")}</span>
+      <span class="card-date"><Icon width={14} height={14} name="mdi:calendar-edit" />{new Date(post.time.updatedAt).toLocaleDateString("zh-CN")}</span>
+    </div>
   </div>
 </a>
 
 <style>
   .post-card {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 14px 18px;
+    gap: 14px;
+    padding: 12px 14px;
     text-decoration: none;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
@@ -53,7 +62,42 @@ const { post } = Astro.props;
       box-shadow: var(--glass-shadow-lg);
       .card-title { color: #fff; }
       .card-desc { color: rgba(255, 255, 255, 0.8); }
+      .card-cover img { transform: scale(1.04); }
     }
+  }
+  .post-card:not(.has-cover) {
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px;
+  }
+  .card-cover {
+    position: relative;
+    flex: 0 0 132px;
+    width: 132px;
+    aspect-ratio: 16 / 10;
+    align-self: stretch;
+    min-height: 96px;
+    overflow: hidden;
+    line-height: 0;
+    border-radius: calc(var(--glass-radius-sm) - 2px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .card-cover img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s;
+  }
+  .card-content {
+    min-width: 0;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
   }
   .card-title {
     font-size: 1.05rem;
@@ -83,6 +127,7 @@ const { post } = Astro.props;
   }
   .card-meta {
     display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     margin-top: 2px;
   }
@@ -93,5 +138,16 @@ const { post } = Astro.props;
     font-size: 0.76rem;
     font-family: var(--font-cascadia-code);
     color: rgba(255, 255, 255, 0.6);
+  }
+  @media (max-width: 560px) {
+    .post-card.has-cover {
+      flex-direction: column;
+    }
+    .card-cover {
+      width: 100%;
+      min-height: 0;
+      flex-basis: auto;
+      aspect-ratio: 16 / 9;
+    }
   }
 </style>

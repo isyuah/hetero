@@ -1,0 +1,118 @@
+---
+interface Props {
+  code?: string;
+  title?: string;
+}
+
+const {
+  code = "",
+  title,
+} = Astro.props;
+---
+
+<figure class="mermaid-block" data-mermaid-block>
+  {title && <figcaption class="mermaid-block__title">{title}</figcaption>}
+  <div class="mermaid-block__canvas" data-mermaid-source={code}>
+    <pre class="mermaid-block__fallback"><code>{code}</code></pre>
+  </div>
+</figure>
+
+<script is:inline>
+  (() => {
+    const blocks = [...document.querySelectorAll('[data-mermaid-source]:not([data-mermaid-ready])')];
+    if (blocks.length === 0) return;
+
+    const loadMermaid = () => {
+      if (window.__mermaidLoader) return window.__mermaidLoader;
+
+      window.__mermaidLoader = import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')
+        .then((mod) => {
+          const mermaid = mod.default;
+          mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: 'strict',
+            theme: 'dark',
+            themeVariables: {
+              background: 'transparent',
+              primaryColor: '#26364f',
+              primaryTextColor: '#f4f8ff',
+              primaryBorderColor: '#80a7df',
+              lineColor: '#9bb8e8',
+              secondaryColor: '#1f2d42',
+              tertiaryColor: '#162235',
+              fontFamily: 'Noto Sans SC, sans-serif',
+            },
+          });
+          return mermaid;
+        });
+
+      return window.__mermaidLoader;
+    };
+
+    loadMermaid().then(async (mermaid) => {
+      for (const block of blocks) {
+        block.dataset.mermaidReady = 'true';
+        const source = block.dataset.mermaidSource || '';
+        const id = `mermaid-${Math.random().toString(36).slice(2)}`;
+
+        try {
+          const { svg } = await mermaid.render(id, source);
+          block.innerHTML = svg;
+          block.closest('[data-mermaid-block]')?.classList.add('is-rendered');
+        } catch (error) {
+          block.closest('[data-mermaid-block]')?.classList.add('has-error');
+          console.error('Failed to render Mermaid diagram', error);
+        }
+      }
+    }).catch((error) => {
+      console.error('Failed to load Mermaid', error);
+    });
+  })();
+</script>
+
+<style>
+  .mermaid-block {
+    margin: 1.2rem 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--glass-radius-sm);
+    background:
+      linear-gradient(180deg, rgba(180, 210, 255, 0.08), transparent 44%),
+      rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  .mermaid-block__title {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .mermaid-block__canvas {
+    min-height: 8rem;
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .mermaid-block__canvas svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .mermaid-block__fallback {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .mermaid-block.is-rendered .mermaid-block__fallback {
+    display: none;
+  }
+
+  .mermaid-block.has-error {
+    border-color: rgba(255, 135, 135, 0.35);
+  }
+</style>

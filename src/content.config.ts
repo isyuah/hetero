@@ -9,6 +9,8 @@ const posts = defineCollection({
   }),
   schema: z.object({
     title: z.string(),
+    cover: z.string().optional(),
+    showCoverInPost: z.boolean().default(false),
     desc: z.string().default("暂无描述"),
     draft: z.boolean().default(false),
     showInPosts: z.boolean().default(true),

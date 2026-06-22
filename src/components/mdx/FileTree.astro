@@ -1,0 +1,255 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface FileTreeItem {
+  name: string;
+  type?: "file" | "folder";
+  icon?: string;
+  open?: boolean;
+  active?: boolean;
+  badge?: string;
+  comment?: string;
+  children?: FileTreeItem[];
+}
+
+interface FileTreeRow extends FileTreeItem {
+  id: string;
+  depth: number;
+  kind: "file" | "folder";
+  isOpen: boolean;
+}
+
+interface Props {
+  title?: string;
+  items?: FileTreeItem[];
+  itemsJson?: string;
+  compact?: boolean;
+}
+
+const {
+  title,
+  items: rawItems = [],
+  itemsJson,
+  compact = false,
+} = Astro.props;
+
+const propItems = Array.isArray(rawItems) ? rawItems : [];
+
+const parseItemsJson = (value: string | undefined): FileTreeItem[] => {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const items = propItems.length > 0 ? propItems : parseItemsJson(itemsJson);
+
+const getItemKind = (item: FileTreeItem): "file" | "folder" => {
+  if (item.type) return item.type;
+  return item.children?.length ? "folder" : "file";
+};
+
+const flattenItems = (
+  currentItems: FileTreeItem[],
+  depth = 0,
+  parentId = "root",
+): FileTreeRow[] => {
+  return currentItems.flatMap((item, index) => {
+    const kind = getItemKind(item);
+    const isOpen = kind === "folder" && item.open !== false;
+    const id = `${parentId}-${index}-${item.name}`;
+    const row: FileTreeRow = {
+      ...item,
+      id,
+      depth,
+      kind,
+      isOpen,
+    };
+
+    if (kind !== "folder" || !isOpen || !item.children?.length) {
+      return [row];
+    }
+
+    return [row, ...flattenItems(item.children, depth + 1, id)];
+  });
+};
+
+const getFileExtension = (name: string) => {
+  const match = name.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return match?.[1] ?? "";
+};
+
+const iconByExtension: Record<string, string> = {
+  astro: "mdi:file-star-outline",
+  css: "mdi:language-css3",
+  html: "mdi:language-html5",
+  js: "mdi:language-javascript",
+  json: "mdi:code-json",
+  jsx: "mdi:react",
+  md: "mdi:language-markdown-outline",
+  mdx: "mdi:language-markdown-outline",
+  mjs: "mdi:language-javascript",
+  png: "mdi:image-outline",
+  svg: "mdi:svg",
+  ts: "mdi:language-typescript",
+  tsx: "mdi:react",
+  txt: "mdi:text-box-outline",
+};
+
+const getIconName = (row: FileTreeRow) => {
+  if (row.icon) return row.icon;
+  if (row.kind === "folder") {
+    return row.isOpen ? "mdi:folder-open-outline" : "mdi:folder-outline";
+  }
+
+  return iconByExtension[getFileExtension(row.name)] ?? "mdi:file-outline";
+};
+
+const rows = flattenItems(items);
+---
+
+<figure class:list={["file-tree", compact && "file-tree--compact"]}>
+  {title && <figcaption class="file-tree__title">{title}</figcaption>}
+  <ul class="file-tree__list" role="tree">
+    {rows.map((row) => (
+      <li
+        class:list={[
+          "file-tree__item",
+          `file-tree__item--${row.kind}`,
+          row.active && "is-active",
+        ]}
+        style={`--depth: ${row.depth};`}
+        role="treeitem"
+        aria-expanded={row.kind === "folder" ? row.isOpen : undefined}
+      >
+        <span class="file-tree__icon" aria-hidden="true">
+          <Icon name={getIconName(row)} width={18} height={18} />
+        </span>
+        <span class="file-tree__name">{row.name}</span>
+        {row.badge && <span class="file-tree__badge">{row.badge}</span>}
+        {row.comment && <span class="file-tree__comment">{row.comment}</span>}
+      </li>
+    ))}
+  </ul>
+</figure>
+
+<style>
+  .file-tree {
+    margin: 1.2rem 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--glass-radius-sm);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 42%),
+      rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  .file-tree__title {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .file-tree__list {
+    list-style: none;
+    margin: 0;
+    padding: 0.45rem;
+  }
+
+  .file-tree__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    padding: 0.28rem 0.7rem 0.28rem calc(0.7rem + var(--depth) * 1.25rem);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .file-tree--compact .file-tree__item {
+    min-height: 1.75rem;
+    padding-top: 0.18rem;
+    padding-bottom: 0.18rem;
+    font-size: 0.86rem;
+  }
+
+  .file-tree__item:hover {
+    background: rgba(180, 210, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .file-tree__item.is-active {
+    background: rgba(180, 210, 255, 0.14);
+    color: rgba(255, 255, 255, 0.96);
+  }
+
+  .file-tree__item.is-active::before {
+    content: "";
+    position: absolute;
+    left: 0.38rem;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 3px;
+    border-radius: 999px;
+    background: rgba(180, 210, 255, 0.9);
+  }
+
+  .file-tree__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: rgba(180, 210, 255, 0.82);
+  }
+
+  .file-tree__item--folder > .file-tree__icon {
+    color: rgba(255, 215, 140, 0.88);
+  }
+
+  .file-tree__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-tree__badge {
+    flex: 0 0 auto;
+    padding: 0.05rem 0.42rem;
+    border: 1px solid rgba(180, 210, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(180, 210, 255, 0.1);
+    color: rgba(220, 235, 255, 0.86);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .file-tree__comment {
+    min-width: 0;
+    margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 640px) {
+    .file-tree__item {
+      padding-right: 0.55rem;
+      font-size: 0.88rem;
+    }
+
+    .file-tree__comment {
+      display: none;
+    }
+  }
+</style>

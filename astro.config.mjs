@@ -6,6 +6,10 @@ import mdx from '@astrojs/mdx';
 import node from '@astrojs/node';
 import expressiveCode from 'astro-expressive-code';
 import rehypeExternalLinks from 'rehype-external-links';
+import remarkDirective from 'remark-directive';
+import remarkCallouts from './src/utils/remarkCallouts';
+import remarkFileTree from './src/utils/remarkFileTree';
+import remarkMdxComponents from './src/utils/remarkMdxComponents';
 
 import icon from 'astro-icon';
 
@@ -19,6 +23,7 @@ export default defineConfig({
     themes: ['github-light'],
   }), mdx(), icon(), sitemap()],
   markdown: {
+    remarkPlugins: [remarkDirective, remarkCallouts, remarkFileTree, remarkMdxComponents],
     rehypePlugins: [[rehypeExternalLinks, {
       target: '_blank',
       rel: ['noopener', 'noreferrer']

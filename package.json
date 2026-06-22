@@ -26,10 +26,13 @@
     "astro-expressive-code": "^0.42.0",
     "astro-icon": "^1.1.5",
     "fuse.js": "^7.4.2",
+    "photoswipe": "^5.4.4",
     "pinyin-pro": "^3.28.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "rehype-external-links": "^3.0.0"
+    "rehype-external-links": "^3.0.0",
+    "remark-directive": "^4.0.0",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@edgeone/astro": "^1.1.2",

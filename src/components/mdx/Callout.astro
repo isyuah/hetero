@@ -1,0 +1,47 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  type?: "tip" | "note" | "warning" | "danger" | "info";
+  title?: string;
+}
+
+const {
+  type = "note",
+  title,
+} = Astro.props;
+
+const calloutType = ["tip", "note", "warning", "danger", "info"].includes(type)
+  ? type
+  : "note";
+
+const defaultTitles: Record<string, string> = {
+  tip: "Tip",
+  note: "Note",
+  warning: "Warning",
+  danger: "Danger",
+  info: "Info",
+};
+
+const icons: Record<string, string> = {
+  tip: "mdi:lightbulb-on-outline",
+  note: "mdi:note-text-outline",
+  warning: "mdi:alert-outline",
+  danger: "mdi:alert-octagon-outline",
+  info: "mdi:information-outline",
+};
+
+const calloutTitle = title?.trim() || defaultTitles[calloutType];
+---
+
+<aside class:list={["callout", `callout-${calloutType}`]}>
+  <div class="callout__header">
+    <span class="callout__icon" aria-hidden="true">
+      <Icon name={icons[calloutType]} width={20} height={20} />
+    </span>
+    <div class="callout__title">{calloutTitle}</div>
+  </div>
+  <div class="callout__body">
+    <slot />
+  </div>
+</aside>
