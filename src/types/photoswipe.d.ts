@@ -28,6 +28,19 @@ declare module "photoswipe" {
     [key: string]: unknown;
   };
 
+  export type PhotoSwipeUIElementData = {
+    name: string;
+    order?: number;
+    isButton?: boolean;
+    appendTo?: "bar" | "wrapper" | "root";
+    html?: string;
+    onInit?: (element: HTMLElement, pswp: PhotoSwipe) => void;
+  };
+
+  export type PhotoSwipeUI = {
+    registerElement(options: PhotoSwipeUIElementData): void;
+  };
+
   export type DataSource = SlideData[] | {
     gallery: HTMLElement;
     items?: HTMLElement[];
@@ -61,20 +74,47 @@ declare module "photoswipe" {
   };
 
   export default class PhotoSwipe {
+    ui?: PhotoSwipeUI;
+    currSlide?: {
+      data?: SlideData;
+    };
+
     constructor(options?: PhotoSwipeOptions);
     init(): boolean;
     destroy(): void;
     close(): void;
+    on(eventName: string, callback: (...args: unknown[]) => void): void;
+    addFilter(filterName: string, callback: (...args: unknown[]) => unknown): void;
   }
 }
 
 declare module "photoswipe/lightbox" {
-  import type { DataSource, PhotoSwipeOptions, Point } from "photoswipe";
+  import PhotoSwipe from "photoswipe";
+  import type { DataSource, PhotoSwipeOptions, Point, SlideData } from "photoswipe";
+
+  export type ElementProvider = string | NodeListOf<HTMLElement> | HTMLElement[] | HTMLElement;
+
+  export type PhotoSwipeLightboxOptions = PhotoSwipeOptions & {
+    gallery?: ElementProvider;
+    gallerySelector?: string;
+    children?: ElementProvider;
+    childSelector?: string;
+    getClickedIndexFn?: (event: MouseEvent) => number;
+  };
 
   export default class PhotoSwipeLightbox {
-    constructor(options?: PhotoSwipeOptions);
+    pswp?: PhotoSwipe;
+
+    constructor(options?: PhotoSwipeLightboxOptions);
     init(): void;
     destroy(): void;
     loadAndOpen(index: number, dataSource?: DataSource, initialPoint?: Point | null): boolean;
+    on(eventName: "uiRegister", callback: () => void): void;
+    on(eventName: string, callback: (...args: unknown[]) => void): void;
+    addFilter(
+      filterName: "domItemData",
+      callback: (itemData: SlideData, element: HTMLElement, linkEl: HTMLAnchorElement) => SlideData,
+    ): void;
+    addFilter(filterName: string, callback: (...args: unknown[]) => unknown): void;
   }
 }

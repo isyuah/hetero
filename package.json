@@ -7,8 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
-    "build-eo": "",
+    "build": "pnpm gallery:sizes && astro build",
+    "build-eo": "pnpm build",
+    "gallery:sizes": "tsx scripts/generate-gallery-sizes.ts",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -39,6 +40,8 @@
     "@iconify-json/mdi": "^1.2.3",
     "@types/node": "^25.6.0",
     "oxfmt": "^0.48.0",
-    "postcss-nesting": "^14.0.0"
+    "postcss-nesting": "^14.0.0",
+    "probe-image-size": "^7.3.0",
+    "tsx": "^4.22.4"
   }
 }
